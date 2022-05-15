@@ -1,6 +1,7 @@
 import numpy as np
 import scipy
 from scipy import interpolate
+from ct_detect import *
 
 def ct_calibrate(photons, material, sinogram, scale):
 
@@ -15,6 +16,9 @@ def ct_calibrate(photons, material, sinogram, scale):
 	# length (has to be the same as in ct_scan.py)
 	n = sinogram.shape[1]
 
+	I0E = ct_detect(photons, material.coeff('Air'), 2*scale*n) 
 	# perform calibration
+	
+	sinogram = -np.log(sinogram / I0E)
 
 	return sinogram
