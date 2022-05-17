@@ -3,6 +3,7 @@ import numpy as np
 import numpy.matlib
 import matplotlib.pyplot as plt
 
+
 def ramp_filter(sinogram, scale, alpha=0.001):
 	""" Ram-Lak filter with raised-cosine for CT reconstruction
 
@@ -20,12 +21,15 @@ def ramp_filter(sinogram, scale, alpha=0.001):
 	m = np.ceil(np.log(2*n-1) / np.log(2))
 	m = int(2 ** m)
 
+
     # ram lak filter
 	w = np.linspace(-np.pi/scale, np.pi/scale, m)
 	filter = abs(w)/(2*np.pi) 
 	power_term = np.cos(w*np.pi/(2*np.pi/scale))**alpha
 	filter = filter*power_term
-	
+	filter = np.concatenate((filter[int(m//2):], filter[0:int(m//2)]))
+
+
     # fft sinogram in the r direction, zero padding so that output sequence has length m
 	sino_fft = np.fft.fft(sinogram, axis=1, n=m)
 	print(sino_fft.shape, filter.shape)
@@ -36,6 +40,9 @@ def ramp_filter(sinogram, scale, alpha=0.001):
 	
 	return np.abs(sino)    #elements in sino are complex, abs OR real????????????
 	#return np.real(sino)
+
+
+
 
 
 
