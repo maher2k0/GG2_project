@@ -1,8 +1,6 @@
 import math
 import numpy as np
 import numpy.matlib
-import matplotlib.pyplot as plt
-
 
 def ramp_filter(sinogram, scale, alpha=0.001):
 	""" Ram-Lak filter with raised-cosine for CT reconstruction
@@ -20,29 +18,28 @@ def ramp_filter(sinogram, scale, alpha=0.001):
 	#Set up filter to be at least twice as long as input
 	m = np.ceil(np.log(2*n-1) / np.log(2))
 	m = int(2 ** m)
+	print(m,angles,n)
 
+	# apply filter to all angles
+	print('Ramp filtering')
+	fft_sinogram = np.fft.fft(sinogram,axis=1).T
+	print(np.shape(fft_sinogram))
+	padded = np.concatenate((fft_sinogram[:int(n/2)][:],np.zeros((n,angles))),axis=0)
+	print(np.shape(padded))
+	padded = np.concatenate((padded,fft_sinogram[int(n/2):][:]),axis=0).T	#n assumed even
+	print(np.shape(padded))
+	omega_0 = 1/(scale*n)
+	omega_max = 1/(scale*2)
+	ramp = np.zeros((m))
+	for i in range(int(m/2)):
+		ramp[i] = abs(omega_0*(i))/(2*np.pi) * np.cos(omega_0*(i)/omega_max*np.pi/2)**alpha
+		i_negative = angles-i
+		ramp[i_negative] = abs(omega_0*(i))/(2*np.pi) * np.cos(omega_0*(-i)/omega_max*np.pi/2)**alpha
+	ramp[0] = ramp[1]/6
 
-    # ram lak filter
-	w = np.linspace(-np.pi/scale, np.pi/scale, m)
-	filter = abs(w)/(2*np.pi) 
-	power_term = np.cos(w*np.pi/(2*np.pi/scale))**alpha
-	filter = filter*power_term
-	filter = np.concatenate((filter[int(m//2):], filter[0:int(m//2)]))
-
-
-    # fft sinogram in the r direction, zero padding so that output sequence has length m
-	sino_fft = np.fft.fft(sinogram, axis=1, n=m)
-	print(sino_fft.shape, filter.shape)
-    # filter by multiplying filter and sinogram in fourier domain
-	filtered_sino = sino_fft * filter[np.newaxis, :]
-    # Inverse fft, then trancate to reach original length
-	sino = np.fft.ifft(filtered_sino, axis=1)[:, :n]
-	
-	return np.abs(sino)    #elements in sino are complex, abs OR real????????????
-	#return np.real(sino)
-
-
-
+	filtered = padded*ramp
+	return np.fft.fft(filtered)
 
 
 
+	return sinogram
