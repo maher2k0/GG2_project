@@ -115,6 +115,35 @@ def test_3():
 	# The mean attenuation value should be around 0.179458cm^-1
 	# which is the attenuation coefficient of soft tissue at 0.1MeV
 
+def implant_noise_test(phantom = 3, mvp = 'high', method = 'ideal'):
+	# explain what this test is for
+	# this test checks noise patterns produced by dense implants under fake sources of 
+	# different energies/type (high or low energy, ideal or normal)
+	# work out what the initial conditions should be
+	p = ct_phantom(material.name, 256, phantom)
+	if mvp == 'high':
+		s = fake_source(source.mev, 0.2, method=method)
+	else:
+		s = fake_source(source.mev, 0.08, method=method)
+
+	# save some meaningful results
+	y = scan_and_reconstruct(s, material, p, 0.1, 256)
+	save_draw(p, 'results/implant_noise_test', 'phantom ' 
+			+ str(phantom), caxis = [0, p.max()])
+	save_draw(y, 'results/implant_noise_test', 'phantom ' 
+			+ str(phantom) + ' test ' + mvp + ' energy ' + method + ' source', caxis = [0, y.max()/4])
+
+
+	# how to check whether these results are actually correct?
+	# ideal source gives a single energy at peak value while normal source gives a distribution of energy around peak. 
+	# It is expected that by using ideal source, the reconstruction will have less noise. This is verified by the graph.
+	# in normal source graph, there is significant noise especially around dense implants such that the boundary in blurred.
+	# The noise is significantly reduced in ideal source plot.
+
+#test_ratio(5, sources)
+
+
+
 
 # Run the various tests
 print('Test 1')
@@ -127,3 +156,5 @@ print('resolution_ideal')
 resolution_ideal()
 print('Test 3')
 test_3()
+implant_noise_test(phantom = 3, method = 'ideal')
+implant_noise_test(phantom = 3, method = 'ideal')
