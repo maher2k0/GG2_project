@@ -18,7 +18,9 @@ source = Source()
 # all the output should be saved in a 'results' directory
 
 def test_1():
-	# explain what this test is for
+	# creates a phantom and uses the scan_and_reconstruct function to
+	# simulate CT scan and reconstruct image from sinogram.
+	# Testing reconstructed geometry
 
 	# work out what the initial conditions should be
 	p = ct_phantom(material.name, 256, 3)
@@ -29,10 +31,14 @@ def test_1():
 	save_draw(y, 'results', 'test_1_image')
 	save_draw(p, 'results', 'test_1_phantom')
 
-	# how to check whether these results are actually correct?
+	# To check if results are correct, visually inspect the phantom and reconstructed image
+	# It's expected that the two images have the same geometry
+	# They will however have different data levels since the phantom is constructed
+	# from a list of indeces related to the material type whereas the reconstructed
+	# image is constructed from a list of linear attenuations
 
 def test_2():
-	# explain what this test is for
+	# returns impulse response of the back projection
 
 	# work out what the initial conditions should be
 	p = ct_phantom(material.name, 256, 2)
@@ -42,10 +48,11 @@ def test_2():
 	# save some meaningful results
 	save_plot(y[128,:], 'results', 'test_2_plot')
 
-	# how to check whether these results are actually correct?
+	# Expecting a sharp pulse
 
 def test_3():
-	# explain what this test is for
+	# This test calculates the mean attenuation of a section of the  reconstruced image
+	# that is dominantly soft tissue. 
 
 	# work out what the initial conditions should be
 	p = ct_phantom(material.name, 256, 1)
@@ -57,7 +64,8 @@ def test_3():
 	f.write('Mean value is ' + str(np.mean(y[64:192, 64:192])))
 	f.close()
 
-	# how to check whether these results are actually correct?
+	# The mean attenuation value should be around 0.179458cm^-1
+	# which is the attenuation coefficient of soft tissue at 0.1MeV
 
 
 # Run the various tests
