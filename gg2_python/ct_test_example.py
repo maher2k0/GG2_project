@@ -18,9 +18,7 @@ source = Source()
 # all the output should be saved in a 'results' directory
 
 def test_1():
-	# creates a phantom and uses the scan_and_reconstruct function to
-	# simulate CT scan and reconstruct image from sinogram.
-	# Testing reconstructed geometry
+	# explain what this test is for
 
 	# work out what the initial conditions should be
 	p = ct_phantom(material.name, 256, 3)
@@ -28,17 +26,16 @@ def test_1():
 	y = scan_and_reconstruct(s, material, p, 0.01, 256)
 
 	# save some meaningful results
-	save_draw(y, 'results', 'test_1_image', caxis =[0,6])
+	save_draw(y, 'results', 'test_1_image')
 	save_draw(p, 'results', 'test_1_phantom')
 
-	# To check if results are correct, visually inspect the phantom and reconstructed image
-	# It's expected that the two images have the same geometry
-	# They will however have different data levels since the phantom is constructed
-	# from a list of indeces related to the material type whereas the reconstructed
-	# image is constructed from a list of linear attenuations
+	# how to check whether these results are actually correct?
 
-def test_2():
-	# returns impulse response of the back projection
+def resolution_real():
+	# explain what this test is for
+	#this test generates a phantom with only one tissue pixel at the center.
+	#the ideal reconstructed image should show an impulse on line 127 and flat on all other lines.
+	#In reconstructed images with real source, the width of the impulse at line 127 (*scale for real size) would be the resoultion of the scan, which is slightly bigger than one pixel
 
 	# work out what the initial conditions should be
 	p = ct_phantom(material.name, 256, 2)
@@ -46,13 +43,43 @@ def test_2():
 	y = scan_and_reconstruct(s, material, p, 0.01, 256)
 
 	# save some meaningful results
-	save_plot(y[128,:], 'results', 'test_2_plot')
+	save_plot(p[127,:], 'results', 'resolution_real_phantom_127')
+	
+	save_plot(y[127,:], 'results', 'resolution_real_plot_127')
+	save_plot(y[128,:], 'results', 'resolution_real_plot_128')
+	save_plot(y[129,:], 'results', 'resolution_real_plot_129')
+	save_plot(y[130,:], 'results', 'resolution_real_plot_130')
 
-	# Expecting a sharp pulse
+	# how to check whether these results are actually correct?
+	#The reconstructed image should show an impulse of certain width (~5 pixels = 0.5mm in this case).
+	#Impulse are still visible on reconstructed image line 128 onwards, which spread out and die down eventually.
+
+def resolution_ideal():
+	# explain what this test is for
+	#this test generates a phantom with only one tissue pixel at the center.
+	#the ideal reconstructed image should show an impulse on line 127 and flat on all other lines.
+	#In reconstructed images with real source, the width of the impulse at line 127 (*scale for real size) would be the resoultion of the scan, which is slightly bigger than one pixel
+	#this test used a fake source instead of a real one, the result turned out to be the same
+
+	# work out what the initial conditions should be
+	p = ct_phantom(material.name, 256, 2)
+	s = fake_source(material.mev, 0.1, material.coeff('Aluminium'), 4,'ideal')
+	y = scan_and_reconstruct(s, material, p, 0.01, 256)
+
+	# save some meaningful results
+	save_plot(p[127,:], 'results', 'resolution_ideal_phantom_127')
+	
+	save_plot(y[127,:], 'results', 'resolution_ideal_plot_127')
+	save_plot(y[128,:], 'results', 'resolution_ideal_plot_128')
+	save_plot(y[129,:], 'results', 'resolution_ideal_plot_129')
+	save_plot(y[130,:], 'results', 'resolution_ideal_plot_130')
+
+	# how to check whether these results are actually correct?
+	#The reconstructed image should show an impulse of certain width (~5 pixels = 0.5mm in this case).
+	#Impulse are still visible on reconstructed image line 128 onwards, which spread out and die down eventually.
 
 def test_3():
-	# This test calculates the mean attenuation of a section of the  reconstruced image
-	# that is dominantly soft tissue. 
+	# explain what this test is for
 
 	# work out what the initial conditions should be
 	p = ct_phantom(material.name, 256, 1)
@@ -64,14 +91,15 @@ def test_3():
 	f.write('Mean value is ' + str(np.mean(y[64:192, 64:192])))
 	f.close()
 
-	# The mean attenuation value should be around 0.179458cm^-1
-	# which is the attenuation coefficient of soft tissue at 0.1MeV
+	# how to check whether these results are actually correct?
 
 
 # Run the various tests
-print('Test 1')
-test_1()
-print('Test 2')
-test_2()
+#print('Test 1')
+#test_1()
+#print('resolution_real')
+#resolution_real()
+print('resolution_ideal')
+resolution_ideal()
 print('Test 3')
 test_3()
