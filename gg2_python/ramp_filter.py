@@ -35,8 +35,7 @@ def ramp_filter(sinogram, scale, alpha=0.001):
 
     # fft sinogram in the r direction, zero padding so that output sequence has length m
 	sino_fft = np.fft.fft(sinogram, axis=1, n=m)
-	
-	print(sino_fft.shape, filter.shape)
+
     # filter by multiplying filter and sinogram in fourier domain
 	filtered_sino = sino_fft * filter[np.newaxis, :]
     # Inverse fft, then trancate to reach original length
