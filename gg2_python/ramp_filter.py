@@ -19,18 +19,19 @@ def ramp_filter(sinogram, scale, alpha=0.001):
 	#Set up filter to be at least twice as long as input
 	m = np.ceil(np.log(2*n-1) / np.log(2))
 	m = int(2 ** m)    #m is at least twich as long as n
+
 	
-	w = np.linspace(-np.pi/scale, np.pi/scale, m)
-	#w = np.linspace(-1/scale, 1/scale, m)
-	filter = abs(w)/(2*np.pi) 
+	filter = np.abs(np.fft.fftfreq(m, d = scale))
+	w = np.concatenate((filter[int(m//2):], filter[0:int(m//2)]))
 	power_term = np.cos(w*np.pi/(2*np.pi/scale))**alpha
 	filter = filter*power_term
-
-	filter = np.concatenate((filter[int(m//2):], filter[0:int(m//2)]))
-
 	
-	#plt.plot(filter)
-	#plt.show()
+	'''
+	plt.plot(filter)
+	plt.show()
+	'''
+	
+
 
     # fft sinogram in the r direction, zero padding so that output sequence has length m
 	sino_fft = np.fft.fft(sinogram, axis=1, n=m)

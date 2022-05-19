@@ -105,15 +105,16 @@ def test_3():
 	# work out what the initial conditions should be
 	p = ct_phantom(material.name, 256, 1)
 	s = fake_source(source.mev, 0.1, method='ideal')
-	y = scan_and_reconstruct(s, material, p, 0.1, 256)
+	y = scan_and_reconstruct(s, material, p, 0.1, 256, alpha = 0)
 
 	# save some meaningful results
 	f = open('results/test_3_output.txt', mode='w')
 	f.write('Mean value is ' + str(np.mean(y[64:192, 64:192])))
 	f.close()
 
-	# The mean attenuation value should be around 0.179458cm^-1
-	# which is the attenuation coefficient of soft tissue at 0.1MeV
+	# The mean attenuation value should be around 0.203963689535233
+	# which is the attenuation coefficient of soft tissue at 0.1MeV * 0.7 = 0.07MeV
+
 
 def implant_noise_test(phantom = 3, mvp = 'high', method = 'ideal'):
 	# explain what this test is for
@@ -140,8 +141,6 @@ def implant_noise_test(phantom = 3, mvp = 'high', method = 'ideal'):
 	# in normal source graph, there is significant noise especially around dense implants such that the boundary in blurred.
 	# The noise is significantly reduced in ideal source plot.
 
-#test_ratio(5, sources)
-
 
 
 
@@ -158,3 +157,4 @@ print('Test 3')
 test_3()
 implant_noise_test(phantom = 3, method = 'ideal')
 implant_noise_test(phantom = 3, method = 'ideal')
+
