@@ -31,8 +31,11 @@ def test_1():
 
 	# how to check whether these results are actually correct?
 
-def test_2():
+def resolution_real():
 	# explain what this test is for
+	#this test generates a phantom with only one tissue pixel at the center.
+	#the ideal reconstructed image should show an impulse on line 127 and flat on all other lines.
+	#In reconstructed images with real source, the width of the impulse at line 127 (*scale for real size) would be the resoultion of the scan, which is slightly bigger than one pixel
 
 	# work out what the initial conditions should be
 	p = ct_phantom(material.name, 256, 2)
@@ -40,9 +43,40 @@ def test_2():
 	y = scan_and_reconstruct(s, material, p, 0.01, 256)
 
 	# save some meaningful results
-	save_plot(y[128,:], 'results', 'test_2_plot')
+	save_plot(p[127,:], 'results', 'resolution_real_phantom_127')
+	
+	save_plot(y[127,:], 'results', 'resolution_real_plot_127')
+	save_plot(y[128,:], 'results', 'resolution_real_plot_128')
+	save_plot(y[129,:], 'results', 'resolution_real_plot_129')
+	save_plot(y[130,:], 'results', 'resolution_real_plot_130')
 
 	# how to check whether these results are actually correct?
+	#The reconstructed image should show an impulse of certain width (~5 pixels = 0.5mm in this case).
+	#Impulse are still visible on reconstructed image line 128 onwards, which spread out and die down eventually.
+
+def resolution_ideal():
+	# explain what this test is for
+	#this test generates a phantom with only one tissue pixel at the center.
+	#the ideal reconstructed image should show an impulse on line 127 and flat on all other lines.
+	#In reconstructed images with real source, the width of the impulse at line 127 (*scale for real size) would be the resoultion of the scan, which is slightly bigger than one pixel
+	#this test used a fake source instead of a real one, the result turned out to be the same
+
+	# work out what the initial conditions should be
+	p = ct_phantom(material.name, 256, 2)
+	s = fake_source(material.mev, 0.1, material.coeff('Aluminium'), 4,'ideal')
+	y = scan_and_reconstruct(s, material, p, 0.01, 256)
+
+	# save some meaningful results
+	save_plot(p[127,:], 'results', 'resolution_ideal_phantom_127')
+	
+	save_plot(y[127,:], 'results', 'resolution_ideal_plot_127')
+	save_plot(y[128,:], 'results', 'resolution_ideal_plot_128')
+	save_plot(y[129,:], 'results', 'resolution_ideal_plot_129')
+	save_plot(y[130,:], 'results', 'resolution_ideal_plot_130')
+
+	# how to check whether these results are actually correct?
+	#The reconstructed image should show an impulse of certain width (~5 pixels = 0.5mm in this case).
+	#Impulse are still visible on reconstructed image line 128 onwards, which spread out and die down eventually.
 
 def test_3():
 	# explain what this test is for
@@ -61,9 +95,11 @@ def test_3():
 
 
 # Run the various tests
-print('Test 1')
-test_1()
-print('Test 2')
-test_2()
+#print('Test 1')
+#test_1()
+#print('resolution_real')
+#resolution_real()
+print('resolution_ideal')
+resolution_ideal()
 print('Test 3')
 test_3()
