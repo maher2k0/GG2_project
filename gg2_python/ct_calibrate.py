@@ -21,4 +21,4 @@ def ct_calibrate(photons, material, sinogram, scale):
 	
 	sinogram = -np.log(sinogram / I0E)
 
-	return sinogram
+	return sinogram	
