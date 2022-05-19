@@ -28,7 +28,7 @@ def test_1():
 	y = scan_and_reconstruct(s, material, p, 0.01, 256)
 
 	# save some meaningful results
-	save_draw(y, 'results', 'test_1_image')
+	save_draw(y, 'results', 'test_1_image', caxis =[0,6])
 	save_draw(p, 'results', 'test_1_phantom')
 
 	# To check if results are correct, visually inspect the phantom and reconstructed image
