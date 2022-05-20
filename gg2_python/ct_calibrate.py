@@ -16,6 +16,7 @@ def ct_calibrate(photons, material, sinogram, scale):
 	# length (has to be the same as in ct_scan.py)
 	n = sinogram.shape[1]
 
+    #compute residual intesity thorugh the air at a depth of length double the side length
 	I0E = ct_detect(photons, material.coeff('Air'), 2*scale*n) 
 	# perform calibration
 	
