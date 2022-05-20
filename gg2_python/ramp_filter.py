@@ -25,6 +25,7 @@ def ramp_filter(sinogram, scale, alpha=0.001):
 	w = np.concatenate((filter[int(m//2):], filter[0:int(m//2)]))
 	power_term = np.cos(w*np.pi/(2*np.pi/scale))**alpha
 	filter = filter*power_term
+	filter[0] = filter[1]/6
 	
 	'''
 	plt.plot(filter)

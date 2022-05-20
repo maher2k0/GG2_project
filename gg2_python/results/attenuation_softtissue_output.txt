@@ -1,1 +1,1 @@
-Mean value is 0.1900183427379874
+Mean value is 0.2033208458684439
