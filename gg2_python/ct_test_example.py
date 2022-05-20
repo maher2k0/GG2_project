@@ -36,7 +36,7 @@ def geometry_check():
 	# image is constructed from a list of linear attenuations
 
 
-def implant_noise_test(phantom = 3, mvp = 'high'):
+def implant_noise_test(phantom = 3, mvp = 'low'):
 	# explain what this test is for
 	# This test is an extension off test 1, which checks whether the reconstruction 
 	# matches phantom with fake photon source
@@ -71,7 +71,7 @@ def implant_noise_test(phantom = 3, mvp = 'high'):
 	# The noise is significantly reduced in ideal source plot.
 
 
-def resolution(source = 'real'):
+def resolution(type = 'real'):
 	# explain what this test is for
 	#this test generates a phantom with only one tissue pixel at the center.
 	#the ideal reconstructed image should show an impulse on line 127 and flat on all other lines.
@@ -79,26 +79,27 @@ def resolution(source = 'real'):
 
 	# work out what the initial conditions should be
 	p = ct_phantom(material.name, 256, 2)
-	if source == 'real':
+	if type == 'real':
+		print(source.name)
 		s = source.photon('80kVp, 1mm Al')
-	elif source == 'ideal':
+	elif type == 'ideal':
 		s = fake_source(material.mev, 0.1, material.coeff('Aluminium'), 4,'ideal')
-	elif source == 'normal':
+	elif type == 'normal':
 		s = fake_source(material.mev, 0.1, material.coeff('Aluminium'), 4,'normal')
 
 	y = scan_and_reconstruct(s, material, p, 0.01, 256)
 
 	# save some meaningful results
-	save_plot(p[127,:], 'results/resolution', str(source) + '_resolution_phantom_127')
+	save_plot(p[127,:], 'results/resolution', str(type) + '_resolution_phantom_127')
 	
-	save_plot(y[127,:], 'results/resolution', str(source) + '_resolution_plot_127')
-	save_plot(y[128,:], 'results/resolution', str(source) + '_resolution_plot_128')
-	save_plot(y[129,:], 'results/resolution', str(source) + '_resolution_plot_129')
+	save_plot(y[127,:], 'results/resolution', str(type) + '_resolution_plot_127')
+	save_plot(y[128,:], 'results/resolution', str(type) + '_resolution_plot_128')
+	save_plot(y[129,:], 'results/resolution', str(type) + '_resolution_plot_129')
 
 	# how to check whether these results are actually correct?
-	#The reconstructed image should show an impulse of certain width (~5 pixels = 0.5mm in this case).
-	#Impulse are still visible on reconstructed image line 128 onwards, which spread out and die down eventually.
-	#
+	# The reconstructed image should show an impulse of certain width (~5 pixels = 0.5mm in this case).
+	# Impulse are still visible on reconstructed image line 128 onwards, which spread out and die down eventually.
+	
 
 def attenucation_softtissue():
 	# This test calculates the mean attenuation of a section of the  reconstruced image
@@ -109,6 +110,8 @@ def attenucation_softtissue():
 	s = fake_source(source.mev, 0.1, method='ideal')
 	y = scan_and_reconstruct(s, material, p, 0.1, 256)
 
+	print('Mean value is ' + str(np.mean(y[64:192, 64:192])))
+	print('Expected value is 0.203963689535233')
 	# save some meaningful results
 	f = open('results/attenuation_softtissue_output.txt', mode='w')
 	f.write('Mean value is ' + str(np.mean(y[64:192, 64:192])))
@@ -155,6 +158,7 @@ def attenuation_all_materials():
 			   0.502343497,2.472408523,7.963246616, 4.818874719, 6.501935809, 0.284726852,
 				9.115561613,5.443009699, 0.631764215, 9.621026538, 6.391060667, 6.491441387, 0.217277511]
 		'''
+		print('-------testing attenuation for material ', name)
 		real.append(material.coeff(name)[np.argmax(s)])
 
 		# get attenuation coefficients in reconstructions
@@ -167,7 +171,9 @@ def attenuation_all_materials():
 	plt.legend()
 	plt.savefig('results/attenuation_all_materials.png')
 	plt.show()
-
+	# most materials give attenuation coefficient values consistent with spreadsheet values.
+	# However, for materials with very high attenuation coefficient, the results is very off
+	# probably because our algorithm not designed to handle extreme values.
 
 def attenucation_energies(mat = 'Soft Tissue'):
 	# this test is similar to attenucation_softtissue, but with different energies rather than only 0.1
@@ -188,6 +194,7 @@ def attenucation_energies(mat = 'Soft Tissue'):
 		material.coeff(mat)[np.argmax(s)]
 		real.append(material.coeff(mat)[np.argmax(s)])
 
+		print('-------testing attenuation for energy ', energy, ' mev')
 		# get attenuation coefficients in reconstructions
 		mean = np.mean(y[64//2:192//2, 64//2:192//2])
 		recons.append(mean)
@@ -202,7 +209,8 @@ def attenucation_energies(mat = 'Soft Tissue'):
 	plt.title('check attenuation coefficient across ideal source with different energy, '+ mat)
 	plt.savefig('results/attenucation_energies_'+mat+'.png')
 	plt.show()
-
+	# plots for real coefficients and reconstructed coefficients should be almost the same
+	# this is shown in our plot
 
 def attenucation_scales():
 	# this test is similar to attenucation_softtissue, but with different scales rather than only 0.1
@@ -223,6 +231,7 @@ def attenucation_scales():
 		material.coeff('Soft Tissue')[np.argmax(s)]
 		real.append(material.coeff('Soft Tissue')[np.argmax(s)])
 
+		print('-------testing attenuation for scale ', scale)
 		# get attenuation coefficients in reconstructions
 		mean = np.mean(y[64//2:192//2, 64//2:192//2])
 		recons.append(mean)
@@ -237,13 +246,14 @@ def attenucation_scales():
 	plt.title('check attenuation coefficient across ideal source with different scale')
 	plt.savefig('results/attenucation_energies.png')
 	plt.show()
+	# our plot shows that our reconstructed attenuation coefficient is invariant to scale of the phantom
 
 
 # Run the various tests
 print('''Tests avaliable:
 1. Geometry check()
 2. implant noise test (phantom = 3/4/5/6/7, mvp = high/low)
-3. resolution test (source = real/ideal/normal)
+3. resolution test (type = real/ideal/normal)
 4. attenucation, single point check through reconstruction of a simple soft tissue phantom ()
 5. attenuation, through ideal relationship at list of depths ()
 6. attenuation, reconstruction of simple circular phantom of all materials ()
@@ -264,10 +274,10 @@ if testcode[0] == '2':
 		mvp = testcode[2]
 	implant_noise_test(phantom, mvp)
 if testcode[0] == '3':
-	source = 'real'
+	type = 'real'
 	if len(testcode) >1:
-		source = testcode[1]
-	resolution(source)
+		type = testcode[1]
+	resolution(type)
 if testcode[0] == '4':
 	attenucation_softtissue()
 if testcode[0] == '5':
@@ -276,7 +286,7 @@ if testcode[0] == '6':
 	attenuation_all_materials()
 if testcode[0] == '7':
 	mat = 'Soft Tissue'
-	if len(testcode) >1 :
+	if len(testcode) > 1 :
 		mat = testcode[1]
 	attenucation_energies(mat)
 if testcode[0] == '8':

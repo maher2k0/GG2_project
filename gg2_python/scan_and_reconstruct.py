@@ -21,7 +21,7 @@ def scan_and_reconstruct(photons, material, phantom, scale, angles, mas=10000, a
 	# convert detector values into calibrated attenuation values
 	calibrated_sinogram = ct_calibrate(photons, material, sinogram, scale)
 	# Ram-Lak
-	calibrated_sinogram = ramp_filter(calibrated_sinogram, scale, alpha=alpha)   #???
+	calibrated_sinogram = ramp_filter(calibrated_sinogram, scale, alpha=alpha)  
 
 	# Back-projection
 	back_projection = back_project(calibrated_sinogram)
