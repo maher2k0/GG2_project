@@ -38,6 +38,35 @@ def test_1():
 	# image is constructed from a list of linear attenuations
 
 
+def implant_noise_test(phantom = 3, mvp = 'high', method = 'ideal'):
+	# explain what this test is for
+	# This test is an extension off test 1, which checks whether the reconstruction 
+	# matches phantom with fake photon source
+	# this test checks noise patterns produced by dense implants under fake sources of 
+	# different types (ideal or normal)
+
+	# work out what the initial conditions should be
+	p = ct_phantom(material.name, 256, phantom)
+	if mvp == 'high':
+		s = fake_source(source.mev, 0.2, method=method)
+	else:
+		s = fake_source(source.mev, 0.08, method=method)
+
+	# save some meaningful results
+	y = scan_and_reconstruct(s, material, p, 0.1, 256)
+	save_draw(p, 'results/implant_noise_test', 'phantom ' 
+			+ str(phantom), caxis = [0, p.max()])
+	save_draw(y, 'results/implant_noise_test', 'phantom ' 
+			+ str(phantom) + ' test ' + mvp + ' energy ' + method + ' source', caxis = [0, y.max()/4])
+
+
+	# how to check whether these results are actually correct?
+	# ideal source gives a single energy at peak value while normal source gives a distribution of energy around peak. 
+	# It is expected that by using ideal source, the reconstruction will have less noise. This is verified by the graph.
+	# in normal source graph, there is significant noise especially around dense implants such that the boundary in blurred.
+	# The noise is significantly reduced in ideal source plot.
+
+
 def resolution_real():
 	# explain what this test is for
 	#this test generates a phantom with only one tissue pixel at the center.
@@ -115,33 +144,6 @@ def test_3():
 	# The mean attenuation value should be around 0.203963689535233cm^-1
 	# which is the attenuation coefficient of soft tissue at 0.7*0.1MeV
 
-def implant_noise_test(phantom = 3, mvp = 'high', method = 'ideal'):
-    	# explain what this test is for
-	# this test checks noise patterns produced by dense implants under fake sources of 
-	# different energies/type (high or low energy, ideal or normal)
-	# work out what the initial conditions should be
-	p = ct_phantom(material.name, 256, phantom)
-	if mvp == 'high':
-		s = fake_source(source.mev, 0.2, method=method)
-	else:
-		s = fake_source(source.mev, 0.08, method=method)
-
-	# save some meaningful results
-	y = scan_and_reconstruct(s, material, p, 0.1, 256)
-	save_draw(p, 'results/implant_noise_test', 'phantom ' 
-			+ str(phantom), caxis = [0, p.max()])
-	save_draw(y, 'results/implant_noise_test', 'phantom ' 
-			+ str(phantom) + ' test ' + mvp + ' energy ' + method + ' source', caxis = [0, y.max()/4])
-
-
-	# how to check whether these results are actually correct?
-	# ideal source gives a single energy at peak value while normal source gives a distribution of energy around peak. 
-	# It is expected that by using ideal source, the reconstruction will have less noise. This is verified by the graph.
-	# in normal source graph, there is significant noise especially around dense implants such that the boundary in blurred.
-	# The noise is significantly reduced in ideal source plot.
-
-#test_ratio(5, sources)
-
 
 def test_attenuate_fn():
     # testing the attenuate function
@@ -153,13 +155,113 @@ def test_attenuate_fn():
 	energies=np.linspace(1,1000,100)
 	res_photons_using_function = []
 	for i in range(len(energies)):
-    		res_photons_using_function.append((attenuate(energies[i],coeffs[i],depths[i]))[0][0])
+		res_photons_using_function.append((attenuate(energies[i],coeffs[i],depths[i]))[0][0])
 	res_photons = [energies*np.exp(-coeffs*depths)]
 
 	assert (np.round_(res_photons, decimals = 5) == np.round_(res_photons_using_function, decimals = 5) ).all()
 
     		
+def test_4():
+	# this test is similar to test_3, but with all materials rather than only soft tissue
+	# compare the reconstructed and real attenuation coefficients
+	
+	recons = []
+	real = []
+	for name in material.name:
+		# create a phantom and reconstruction
+		s = fake_source(source.mev, 0.1, method='ideal')
+		p = ct_phantom(material.name, 256//2, 1, metal=name)
+		y = scan_and_reconstruct(s, material, p, 0.1, 256//2)
 
+		# real attenuation coefficients from datasheet
+		'''
+		real =[0.0002118, 0.178483174, 0.20396369, 0.193529618, 0.19368997, 0.204619413, 
+			   0.502343497,2.472408523,7.963246616, 4.818874719, 6.501935809, 0.284726852,
+				9.115561613,5.443009699, 0.631764215, 9.621026538, 6.391060667, 6.491441387, 0.217277511]
+		'''
+		real.append(material.coeff(name)[np.argmax(s)])
+
+		# get attenuation coefficients in reconstructions
+		mean = np.mean(y[64//2:192//2, 64//2:192//2])
+		recons.append(mean)
+
+	plt.plot(material.name, real, label ='real attenuation coef')
+	plt.plot(material.name, recons, label = 'reconstructed attenuation coef')
+	plt.xticks(rotation=90)
+	plt.legend()
+	plt.savefig('results/test_4.png')
+	plt.show()
+
+
+def test_5(mat = 'Soft Tissue'):
+	# this test is similar to test_3, but with different energies rather than only 0.1
+	# compare the reconstructed and real attenuation coefficients
+	
+	# NOTE: some materials gives very small results. Unsure why
+	energies = source.mev[20:150][::8]
+	recons = []
+	real = []
+	p = ct_phantom(material.name, 256//2, 1, metal=mat)
+	for energy in energies:
+		# create a phantom and reconstruction
+		s = fake_source(source.mev, energy/0.7, method='ideal')
+		y = scan_and_reconstruct(s, material, p, 0.1, 256//2)
+
+		# real attenuation coefficients from datasheet
+		material.coeff(mat)[np.argmax(s)]
+		real.append(material.coeff(mat)[np.argmax(s)])
+
+		# get attenuation coefficients in reconstructions
+		mean = np.mean(y[64//2:192//2, 64//2:192//2])
+		recons.append(mean)
+
+	plt.plot(energies, real, label ='real attenuation coef')
+	plt.plot(energies, recons, label = 'reconstructed attenuation coef')
+	plt.xticks(rotation=90)
+	plt.ylim((0,max(max(recons), max(real))*1.2))
+	plt.xlabel('energy of source')
+	plt.ylabel('attenuation coef')
+	plt.legend()
+	plt.title('check attenuation coefficient across ideal source with different energy, '+ mat)
+	plt.savefig('results/test_5.png')
+	plt.show()
+
+
+def test_6():
+	# this test is similar to test_3, but with different scales rather than only 0.1
+	# compare the reconstructed and real attenuation coefficients
+	
+
+	scales = np.linspace(0.02,0.2,10)
+	recons = []
+	real = []
+	
+	for scale in scales:
+		p = ct_phantom(material.name, 256//2, 1)
+		# create a phantom and reconstruction
+		s = fake_source(source.mev, 0.1, method='ideal')
+		y = scan_and_reconstruct(s, material, p, scale, 256//2)
+
+		# real attenuation coefficients from datasheet
+		material.coeff('Soft Tissue')[np.argmax(s)]
+		real.append(material.coeff('Soft Tissue')[np.argmax(s)])
+
+		# get attenuation coefficients in reconstructions
+		mean = np.mean(y[64//2:192//2, 64//2:192//2])
+		recons.append(mean)
+
+	plt.plot(scales, real, label ='real attenuation coef')
+	plt.plot(scales, recons, label = 'reconstructed attenuation coef')
+	plt.xticks(rotation=90)
+	plt.ylim((0,max(max(recons), max(real))*1.2))
+	plt.xlabel('scale')
+	plt.ylabel('attenuation coef')
+	plt.legend()
+	plt.title('check attenuation coefficient across ideal source with different scale')
+	plt.savefig('results/test_6.png')
+	plt.show()
+
+'''
 # Run the various tests
 print('Test 1')
 test_1()
@@ -175,3 +277,8 @@ implant_noise_test(phantom = 3, method = 'ideal')
 implant_noise_test(phantom = 3, method = 'ideal')
 print('Test attenuate function')
 test_attenuate_fn()
+'''
+test_3()
+test_4()
+test_5(material.name[3])
+test_6()

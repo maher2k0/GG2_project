@@ -30,7 +30,6 @@ def ramp_filter(sinogram, scale, alpha=0.001):
 	plt.plot(filter)
 	plt.show()
 	'''
-	
 
 
     # fft sinogram in the r direction, zero padding so that output sequence has length m
@@ -41,5 +40,4 @@ def ramp_filter(sinogram, scale, alpha=0.001):
     # Inverse fft, then trancate to reach original length
 	sino = np.fft.ifft(filtered_sino, axis=1)[:, :n]
 
-	return np.real(sino)    #elements in sino are complex, abs OR real????????????
-	#return np.real(sino)
+	return np.real(sino)    
