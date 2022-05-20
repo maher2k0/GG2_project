@@ -1,5 +1,3 @@
-
-# these are the imports you are likely to need
 import numpy as np
 from material import *
 from source import *
@@ -17,7 +15,7 @@ source = Source()
 # these are just some examples to get you started
 # all the output should be saved in a 'results' directory
 
-def test_1():
+def geometry_check():
 	# creates a phantom and uses the scan_and_reconstruct function to
 	# simulate CT scan and reconstruct image from sinogram.
 	# Testing reconstructed geometry
@@ -28,8 +26,8 @@ def test_1():
 	y = scan_and_reconstruct(s, material, p, 0.01, 256)
 
 	# save some meaningful results
-	save_draw(y, 'results', 'test_1_image')
-	save_draw(p, 'results', 'test_1_phantom')
+	save_draw(y, 'results/geometry_check', 'geometry_check_image')
+	save_draw(p, 'results/geometry_check', 'geometry_check_phantom')
 
 	# To check if results are correct, visually inspect the phantom and reconstructed image
 	# It's expected that the two images have the same geometry
@@ -38,7 +36,7 @@ def test_1():
 	# image is constructed from a list of linear attenuations
 
 
-def implant_noise_test(phantom = 3, mvp = 'high', method = 'ideal'):
+def implant_noise_test(phantom = 3, mvp = 'high'):
 	# explain what this test is for
 	# This test is an extension off test 1, which checks whether the reconstruction 
 	# matches phantom with fake photon source
@@ -48,16 +46,22 @@ def implant_noise_test(phantom = 3, mvp = 'high', method = 'ideal'):
 	# work out what the initial conditions should be
 	p = ct_phantom(material.name, 256, phantom)
 	if mvp == 'high':
-		s = fake_source(source.mev, 0.2, method=method)
+		energy = 0.2
+		
 	else:
-		s = fake_source(source.mev, 0.08, method=method)
+		energy = 0.08
+	s_ideal = fake_source(source.mev, energy, method='ideal')
+	s_normal = fake_source(source.mev, energy, method='normal')
 
 	# save some meaningful results
-	y = scan_and_reconstruct(s, material, p, 0.1, 256)
+	y_ideal = scan_and_reconstruct(s_ideal, material, p, 0.1, 256)
+	y_normal = scan_and_reconstruct(s_normal, material, p, 0.1, 256)
 	save_draw(p, 'results/implant_noise_test', 'phantom ' 
 			+ str(phantom), caxis = [0, p.max()])
-	save_draw(y, 'results/implant_noise_test', 'phantom ' 
-			+ str(phantom) + ' test ' + mvp + ' energy ' + method + ' source', caxis = [0, y.max()/4])
+	save_draw(y_ideal, 'results/implant_noise_test', 'phantom ' 
+			+ str(phantom) + ' test ' + mvp + ' energy ideal source', caxis = [0, y_ideal.max()/4])
+	save_draw(y_normal, 'results/implant_noise_test', 'phantom ' 
+			+ str(phantom) + ' test ' + mvp + ' energy normal source', caxis = [0, y_normal.max()/4])
 
 
 	# how to check whether these results are actually correct?
@@ -67,7 +71,7 @@ def implant_noise_test(phantom = 3, mvp = 'high', method = 'ideal'):
 	# The noise is significantly reduced in ideal source plot.
 
 
-def resolution_real():
+def resolution(source = 'real'):
 	# explain what this test is for
 	#this test generates a phantom with only one tissue pixel at the center.
 	#the ideal reconstructed image should show an impulse on line 127 and flat on all other lines.
@@ -75,59 +79,28 @@ def resolution_real():
 
 	# work out what the initial conditions should be
 	p = ct_phantom(material.name, 256, 2)
-	s = source.photon('80kVp, 1mm Al')
-	y = scan_and_reconstruct(s, material, p, 0.01, 256, caxis = [0,6])
+	if source == 'real':
+		s = source.photon('80kVp, 1mm Al')
+	elif source == 'ideal':
+		s = fake_source(material.mev, 0.1, material.coeff('Aluminium'), 4,'ideal')
+	elif source == 'normal':
+		s = fake_source(material.mev, 0.1, material.coeff('Aluminium'), 4,'normal')
 
-	# save some meaningful results
-	save_plot(p[127,:], 'results', 'resolution_real_phantom_127')
-	
-	save_plot(y[127,:], 'results', 'resolution_real_plot_127')
-	save_plot(y[128,:], 'results', 'resolution_real_plot_128')
-	save_plot(y[129,:], 'results', 'resolution_real_plot_129')
-	save_plot(y[130,:], 'results', 'resolution_real_plot_130')
-
-	# how to check whether these results are actually correct?
-	#The reconstructed image should show an impulse of certain width (~5 pixels = 0.5mm in this case).
-	#Impulse are still visible on reconstructed image line 128 onwards, which spread out and die down eventually.
-
-# def test_2():
-#     	# returns impulse response of the back projection
-
-# 	# work out what the initial conditions should be
-# 	p = ct_phantom(material.name, 256, 2)
-# 	s = source.photon('80kVp, 1mm Al')
-# 	y = scan_and_reconstruct(s, material, p, 0.01, 256)
-
-# 	# save some meaningful results
-# 	save_plot(y[128,:], 'results', 'test_2_plot')
-
-# 	# Expecting a sharp pulse
-
-def resolution_ideal():
-	# explain what this test is for
-	#this test generates a phantom with only one tissue pixel at the center.
-	#the ideal reconstructed image should show an impulse on line 127 and flat on all other lines.
-	#In reconstructed images with real source, the width of the impulse at line 127 (*scale for real size) would be the resoultion of the scan, which is slightly bigger than one pixel
-	#this test used a fake source instead of a real one, the result turned out to be the same
-
-	# work out what the initial conditions should be
-	p = ct_phantom(material.name, 256, 2)
-	s = fake_source(material.mev, 0.1, material.coeff('Aluminium'), 4,'ideal')
 	y = scan_and_reconstruct(s, material, p, 0.01, 256)
 
 	# save some meaningful results
-	save_plot(p[127,:], 'results', 'resolution_ideal_phantom_127')
+	save_plot(p[127,:], 'results/resolution', str(source) + '_resolution_phantom_127')
 	
-	save_plot(y[127,:], 'results', 'resolution_ideal_plot_127')
-	save_plot(y[128,:], 'results', 'resolution_ideal_plot_128')
-	save_plot(y[129,:], 'results', 'resolution_ideal_plot_129')
-	save_plot(y[130,:], 'results', 'resolution_ideal_plot_130')
+	save_plot(y[127,:], 'results/resolution', str(source) + '_resolution_plot_127')
+	save_plot(y[128,:], 'results/resolution', str(source) + '_resolution_plot_128')
+	save_plot(y[129,:], 'results/resolution', str(source) + '_resolution_plot_129')
 
 	# how to check whether these results are actually correct?
 	#The reconstructed image should show an impulse of certain width (~5 pixels = 0.5mm in this case).
 	#Impulse are still visible on reconstructed image line 128 onwards, which spread out and die down eventually.
+	#
 
-def test_3():
+def attenucation_softtissue():
 	# This test calculates the mean attenuation of a section of the  reconstruced image
 	# that is dominantly soft tissue. 
 
@@ -137,7 +110,7 @@ def test_3():
 	y = scan_and_reconstruct(s, material, p, 0.1, 256)
 
 	# save some meaningful results
-	f = open('results/test_3_output.txt', mode='w')
+	f = open('results/attenuation_softtissue_output.txt', mode='w')
 	f.write('Mean value is ' + str(np.mean(y[64:192, 64:192])))
 	f.close()
 
@@ -158,12 +131,15 @@ def test_attenuate_fn():
 		res_photons_using_function.append((attenuate(energies[i],coeffs[i],depths[i]))[0][0])
 	res_photons = [energies*np.exp(-coeffs*depths)]
 
-	assert (np.round_(res_photons, decimals = 5) == np.round_(res_photons_using_function, decimals = 5) ).all()
+	assert(np.round_(res_photons, decimals = 5) == np.round_(res_photons_using_function, decimals = 5) ).all()
+	print('test passed')
+	return 0
 
     		
-def test_4():
-	# this test is similar to test_3, but with all materials rather than only soft tissue
+def attenuation_all_materials():
+	# this test is similar to attenuation_softtissue, but with all materials rather than only soft tissue
 	# compare the reconstructed and real attenuation coefficients
+	#the result corresponds well with the datasheet values for most tissue materials, but is quite different for some dense metals
 	
 	recons = []
 	real = []
@@ -189,14 +165,15 @@ def test_4():
 	plt.plot(material.name, recons, label = 'reconstructed attenuation coef')
 	plt.xticks(rotation=90)
 	plt.legend()
-	plt.savefig('results/test_4.png')
+	plt.savefig('results/attenuation_all_materials.png')
 	plt.show()
 
 
-def test_5(mat = 'Soft Tissue'):
-	# this test is similar to test_3, but with different energies rather than only 0.1
+def attenucation_energies(mat = 'Soft Tissue'):
+	# this test is similar to attenucation_softtissue, but with different energies rather than only 0.1
 	# compare the reconstructed and real attenuation coefficients
-	
+	# reconstructed attenuation coefficient should closely track the datasheet values at corresponding energies
+
 	# NOTE: some materials gives very small results. Unsure why
 	energies = source.mev[20:150][::8]
 	recons = []
@@ -223,14 +200,14 @@ def test_5(mat = 'Soft Tissue'):
 	plt.ylabel('attenuation coef')
 	plt.legend()
 	plt.title('check attenuation coefficient across ideal source with different energy, '+ mat)
-	plt.savefig('results/test_5.png')
+	plt.savefig('results/attenucation_energies_'+mat+'.png')
 	plt.show()
 
 
-def test_6():
-	# this test is similar to test_3, but with different scales rather than only 0.1
+def attenucation_scales():
+	# this test is similar to attenucation_softtissue, but with different scales rather than only 0.1
 	# compare the reconstructed and real attenuation coefficients
-	
+	#reconstructed attenuation coefficient should be invariant to scale of the phantom
 
 	scales = np.linspace(0.02,0.2,10)
 	recons = []
@@ -258,27 +235,49 @@ def test_6():
 	plt.ylabel('attenuation coef')
 	plt.legend()
 	plt.title('check attenuation coefficient across ideal source with different scale')
-	plt.savefig('results/test_6.png')
+	plt.savefig('results/attenucation_energies.png')
 	plt.show()
 
-'''
+
 # Run the various tests
-print('Test 1')
-test_1()
-# print('Test 2')
-# test_2()
-#print('resolution_real')
-#resolution_real()
-print('resolution_ideal')
-resolution_ideal()
-print('Test 3')
-test_3()
-implant_noise_test(phantom = 3, method = 'ideal')
-implant_noise_test(phantom = 3, method = 'ideal')
-print('Test attenuate function')
-test_attenuate_fn()
-'''
-test_3()
-test_4()
-test_5(material.name[3])
-test_6()
+print('''Tests avaliable:
+1. Geometry check()
+2. implant noise test (phantom = 3/4/5/6/7, mvp = high/low)
+3. resolution test (source = real/ideal/normal)
+4. attenucation, single point check through reconstruction of a simple soft tissue phantom ()
+5. attenuation, through ideal relationship at list of depths ()
+6. attenuation, reconstruction of simple circular phantom of all materials ()
+7. attenuation, with a list of energies(materials)
+8. atteunation, with a list of scales()
+''')
+testcode = input('Please choose the test to be conducted: ')
+
+testcode = testcode.split(' ')
+if testcode[0] == '1':
+	geometry_check()
+if testcode[0] == '2':
+	phantom = 3
+	mvp = 'high'
+	if len(testcode) >1 :
+		phantom = int(testcode[1])
+	if len(testcode) >2 :
+		mvp = testcode[2]
+	implant_noise_test(phantom, mvp)
+if testcode[0] == '3':
+	source = 'real'
+	if len(testcode) >1:
+		source = testcode[1]
+	resolution(source)
+if testcode[0] == '4':
+	attenucation_softtissue()
+if testcode[0] == '5':
+	test_attenuate_fn()
+if testcode[0] == '6':
+	attenuation_all_materials()
+if testcode[0] == '7':
+	mat = 'Soft Tissue'
+	if len(testcode) >1 :
+		mat = testcode[1]
+	attenucation_energies(mat)
+if testcode[0] == '8':
+	attenucation_scales()
