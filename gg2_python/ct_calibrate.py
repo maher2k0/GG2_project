@@ -20,6 +20,27 @@ def ct_calibrate(photons, material, sinogram, scale):
 	I0E = ct_detect(photons, material.coeff('Air'), 2*scale*n) 
 	# perform calibration
 	
-	sinogram = -np.log(sinogram / I0E)
+	tot_attenuation = -np.log(sinogram / I0E)
 
-	return sinogram	
+#====================================================================================
+	"""beam hardening correction"""
+
+	#range of different water thicknesses
+	tw = np.linspace(0.01,30,1000)
+	#residual intensity after passing thorugh range of depths tw
+	res_int = ct_detect(photons, material.coeff('Water'), tw)
+	#calibration
+	pw = -np.log(res_int/I0E)
+
+	#fit a 2nd order polynomial function around tw,pw (tw=f(pw))
+	f = np.polynomial.polynomial.polyfit(pw,tw,2)
+	#evaluate polynomial f for points in calinrated sinogram
+	#twm is the equivalent water thickness for each measured attenuation value pm
+	twm = np.polynomial.polynomial.polyval(tot_attenuation,f)
+	
+	C = 0.1#sinogram/twm #should not matter what value it is set once data converted to HU
+#======================================================================================
+	tot_attenuation = C*twm
+
+
+	return tot_attenuation
