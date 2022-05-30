@@ -57,28 +57,47 @@ def ct_detect(p, coeffs, depth, mas=10000):
 	# sum this over energies
 	detector_photons = np.sum(detector_photons, axis=0)
 
-	'''
 	# ????? how to determine constants needed ???????
+	# test: with how much a constant will there be observable difference
 	# model noise
 	# calculate number of photons expected
-	area = 0.01 	# scale ** 2  ?
+	b_noise = True    # include background noise or not
+	s_noise = False 	  # include scattering noise o not
+	background = 0
+	scattered = 0
+
+	area = 0.01 	# scale ** 2  yes right
 	detector_photons *= area*mas 
+	#detector_photons = np.random.poisson(detector_photons/lambda_scale) * correction   #no of transmited photons follows poisson distribuion, lam value too much
+	detector_photons = np.random.normal(detector_photons, detector_photons**0.5)
+
 
 	# background noise
-	background = 1000						
-	background *= area
+	if b_noise:
+		background_level = 1e32		#per area				
+		background = area*background_level
+		background = np.random.normal(background, background**0.5)
+
 
 	# scattering noise
-	scatter_coef = 0.001			
-	scattered = np.sum(p)*area*mas*scatter_coef
+	if s_noise:
+		scatter_coef = 0.001
+		scattered = np.sum(p)*area*mas*scatter_coef    #???
+		scattered = np.random.normal(scattered, scattered**0.5)
+	
 
 	detector_photons = detector_photons + background + scattered
 
 	# model noise	
-	detector_photons = np.random.normal(detector_photons, detector_photons**0.5)
+	#detector_photons = np.random.normal(detector_photons, detector_photons**0.5)
 
 	# minimum detection is one photon
 	detector_photons = np.clip(detector_photons, 1, detector_photons.max())
-	'''
+	
+	#print(detector_photons)
+	
 	return detector_photons
 
+'''
+ct_detect for every angle --> ct_scan to give sinogram --> calibrate --> ramp filer --> back_project to give reconstruction
+'''

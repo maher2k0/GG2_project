@@ -18,7 +18,7 @@ def scan_and_reconstruct(photons, material, phantom, scale, angles, mas=10000, a
 
 	# convert source (photons per (mas, cm^2)) to photons
 	#photons *= scale**2 * mas    #???
-	photons *= scale**2 *mas
+	#photons *= scale**2 *mas
 	# create sinogram from phantom data, with received detector values
 	sinogram = ct_scan(photons, material, phantom, scale, angles)
 	# convert detector values into calibrated attenuation values
