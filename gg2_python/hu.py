@@ -22,5 +22,6 @@ def hu(p, material, reconstruction, scale):
 	# limit minimum to -1024, which is normal for CT data.
 	reconstruction_hu = 1000*(reconstruction-mu_w)/mu_w
 	reconstruction_hu[reconstruction_hu < -1024] = -1024
-
+	reconstruction_hu[reconstruction_hu > 3072] = 3072
+	
 	return reconstruction_hu

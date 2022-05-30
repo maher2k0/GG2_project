@@ -278,6 +278,27 @@ class Xtreme(object):
                     if (scan<self.scans):
 
 						# reconstruct scan
+                        #sinogram, no x-ray source, no object
+                        f, fmin, fmax = self.get_rsq_slice(scan)
+
+                        #perform calibration
+                        tot_attenuation = -np.log((f-fmin)/(fmax-fmin))
+
+                        #fan-based sinogram to equiv. parallel based sinogram
+                        parallel_sino = self.fan_to_parallel(tot_attenuation)
+
+                        #Apply Ram-Lak filter
+                        sino = ramp_filter(parallel_sino, self.scale, alpha)
+
+                        #Back-projection
+                        reconstruction = back_project(sino)
+
+                        #convert to HU 
+                        #water attn. at 0.006MeV is 0.2059cm^-1 = 0.02059mm^-1
+                        mu_w = 0.02059 #water attenuation
+                        reconstruction = 1000 * (reconstruction - mu_w) / mu_w
+                        reconstruction[reconstruction < -1024] = -1024
+                        reconstruction[reconstruction > 3072] = 3072
 
 						# save as dicom file
                         z = z + 1

@@ -38,7 +38,7 @@ def ct_calibrate(photons, material, sinogram, scale):
 	#twm is the equivalent water thickness for each measured attenuation value pm
 	twm = np.polynomial.polynomial.polyval(tot_attenuation,f)
 	
-	C = 0.1#sinogram/twm #should not matter what value it is set once data converted to HU
+	C = 0.2#sinogram/twm #should not matter what value it is set once data converted to HU
 #======================================================================================
 	tot_attenuation = C*twm
 
