@@ -302,6 +302,5 @@ class Xtreme(object):
 
 						# save as dicom file
                         z = z + 1
-
         return
 
